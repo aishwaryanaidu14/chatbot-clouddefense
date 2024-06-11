@@ -9,50 +9,103 @@ from flask import Flask, render_template, request, jsonify
 
 base_url = "https://support.clouddefense.ai"
 
-def fetch_article_links(page_url):
-    try:
-        response = requests.get(page_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        links = set()
+def fetch_article_links(page_url, visited_urls=None):
+    if visited_urls is None:
+        visited_urls = set()
 
-        for link in soup.find_all('a', href=True):
-            href = link['href']
-            if '/support/solutions/articles/' in href:
-                full_url = base_url + href
-                links.add(full_url)
-
-        return links
-    except Exception as e:
-        print(f"Error fetching article links: {e}")
+    if page_url in visited_urls:
         return set()
 
+    visited_urls.add(page_url)
+    response = requests.get(page_url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    links = set()
+
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        if '/support/solutions/articles/' in href:
+            full_url = base_url + href
+            links.add(full_url)
+        elif '/support/solutions/folders/' in href:
+            folder_url = base_url + href
+            links.update(fetch_article_links(folder_url, visited_urls))
+
+    return links
+
+solutions_page = base_url + "/support/solutions"
+article_links = fetch_article_links(solutions_page)
+print(f"Found {len(article_links)} article links.")
+
 def fetch_article_content(url):
-    try:
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        article_content = soup.get_text(separator=' ')
-        return article_content.strip()
-    except Exception as e:
-        print(f"Error fetching article content: {e}")
-        return ""
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    article_content = soup.get_text(separator=' ')
+    return article_content.strip()
 
 def chunk_text(text, max_length=512):
     words = text.split()
     chunks = []
+    current_chunk = []
 
-    for i in range(0, len(words), max_length):
-        chunk = ' '.join(words[i:i + max_length])
-        chunks.append(chunk)
+    for word in words:
+        current_chunk.append(word)
+        if len(current_chunk) >= max_length:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = []
+
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
 
     return chunks
 
-def embed_text(text, model, tokenizer):
+document_chunks = {}
+for url in article_links:
+    content = fetch_article_content(url)
+    document_chunks[url] = chunk_text(content)
+
+print(f"Chunked {len(document_chunks)} documents.")
+
+model_name = "sentence-transformers/all-MiniLM-L6-v2"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+def embed_text(text):
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
         outputs = model(**inputs)
     return outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
 
-def retrieve_document_links(query, embeddings, mapping, model, tokenizer, top_n=3):
+embeddings = []
+mapping = []
+
+for doc_url, chunks in document_chunks.items():
+    for i, chunk in enumerate(chunks):
+        embedding = embed_text(chunk)
+        embeddings.append(embedding)
+        mapping.append((doc_url, i))
+
+embeddings = np.array(embeddings)
+print(f"Created embeddings for {len(embeddings)} chunks.")
+
+with open("embeddings.pkl", "wb") as f:
+    pickle.dump(embeddings, f)
+
+with open("mapping.pkl", "wb") as f:
+    pickle.dump(mapping, f)
+
+with open("embeddings.pkl", "rb") as f:
+    embeddings = pickle.load(f)
+
+with open("mapping.pkl", "rb") as f:
+    mapping = pickle.load(f)
+
+def retrieve_document_links(query, top_n=3):
+    query_embedding = embed_text(query)
+    similarities = cosine_similarity([query_embedding], embeddings)
+    sorted_indices = np.argsort(similarities[0])[::-1]
+    ranked_links = [(mapping[i][0], mapping[i][1], similarities[0][i]) for i in sorted_indices[:top_n]]
+    return ranked_links
+'''def retrieve_document_links(query, embeddings, mapping, model, tokenizer, top_n=3):
     try:
         query_embedding = embed_text(query, model, tokenizer)
         similarities = cosine_similarity([query_embedding], embeddings)
@@ -94,6 +147,7 @@ with open("embeddings.pkl", "wb") as f:
 
 with open("mapping.pkl", "wb") as f:
     pickle.dump(mapping, f)
+'''
 app = Flask(__name__)
 
 @app.route('/')
@@ -107,19 +161,23 @@ def search():
 
         if query is None:
             return jsonify([])
+        
+        ranked_links = retrieve_document_links(query)
+        print("Top ranked links:")
+        for link, chunk_idx, score in ranked_links:
+            print(f"Link: {link}, Chunk Index: {chunk_idx}, Score: {score}")
 
-        with open("embeddings.pkl", "rb") as f:
-            embeddings = pickle.load(f)
+        #with open("embeddings.pkl", "rb") as f:
+         #   embeddings = pickle.load(f)
 
-        with open("mapping.pkl", "rb") as f:
-            mapping = pickle.load(f)
+        #with open("mapping.pkl", "rb") as f:
+          #  mapping = pickle.load(f)
 
-        ranked_links = retrieve_document_links(query, embeddings, mapping, model, tokenizer)
+        #ranked_links = retrieve_document_links(query, embeddings, mapping, model, tokenizer)
         return jsonify(ranked_links)
     except Exception as e:
         print(f"Error in search: {e}")
         return jsonify([])
-
     '''
     query = request.form['query']
 
