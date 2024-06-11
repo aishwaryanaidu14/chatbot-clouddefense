@@ -1,6 +1,6 @@
 # CloudDefense Chatbot Setup Guide
 
-This guide will walk you through setting up the CloudDefense chatbot project, which uses Python Flask along with various libraries for web scraping and natural language processing.
+This guide will walk you through setting up the CloudDefense chatbot project
 
 ## Prerequisites
 
