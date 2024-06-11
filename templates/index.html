@@ -16,7 +16,7 @@
             background-color: #f0f0f0;
         }
 
-        .chat-container {
+       .chat-container {
             width: 600px;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -25,7 +25,7 @@
             overflow: hidden;
         }
 
-        .chat-title {
+       .chat-title {
             text-align: center;
             font-size: 1.5em;
             margin-bottom: 20px;
@@ -33,17 +33,16 @@
             font-weight: bold;
         }
 
-        .chat-log {
+       .chat-log {
             overflow-y: scroll;
             max-height: 400px;
             padding: 10px;
             margin-bottom: 20px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end; /* Align bubbles to the right */
         }
 
-        .message {
+       .message {
             padding: 10px;
             margin: 5px 0;
             border-radius: 10px;
@@ -53,46 +52,46 @@
             max-width: calc(100% - 20px);
         }
 
-        .user-message {
+       .user-message {
             background-color: #007bff;
             color: #fff;
             align-self: flex-end;
             text-align: right;
         }
 
-        .bot-message {
+       .bot-message {
             background-color: #eee;
             color: #333;
             align-self: flex-start;
         }
 
-        .bot-message a {
+       .bot-message a {
             font-weight: bold;
             color: #007bff;
             text-decoration: none;
         }
 
-        .bot-message a:hover {
+       .bot-message a:hover {
             text-decoration: underline;
         }
 
-        .bot-message .score {
+       .bot-message.score {
             opacity: 0.5;
         }
 
-        .chat-input {
+       .chat-input {
             display: flex;
             margin-top: 10px;
         }
 
-        .chat-input input {
+       .chat-input input {
             flex: 1;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px 0 0 4px;
         }
 
-        .chat-input button {
+       .chat-input button {
             padding: 10px 20px;
             border: none;
             background-color: #007bff;
@@ -133,6 +132,7 @@
             userMessage.textContent = message;
             userMessage.className = "message user-message";
             messages.appendChild(userMessage);
+
             input.value = "";
 
             fetch('/get_links', {
@@ -140,17 +140,22 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: message })
             })
-            .then(response => response.json())
-            .then(data => {
+           .then(response => response.json())
+           .then(data => {
                 data.forEach(item => {
                     var botMessage = document.createElement("div");
                     botMessage.innerHTML = `<span><a href="${item.link}" target="_blank">${item.link}</a></span> (Score: <span class="score">${item.score.toFixed(4)}</span>)`;
                     botMessage.className = "message bot-message";
                     messages.appendChild(botMessage);
                 });
-                messages.scrollTop = messages.scrollHeight;
+                scrollToBottom();
             })
-            .catch(error => console.error('Error:', error));
+           .catch(error => console.error('Error:', error));
+        }
+
+        function scrollToBottom() {
+            var messagesLog = document.getElementById("messages");
+            messagesLog.scrollTop = messagesLog.scrollHeight;
         }
     </script>
 </body>
