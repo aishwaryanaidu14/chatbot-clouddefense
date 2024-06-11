@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Search</title>
+</head>
+<body>
+    <h1>Document Search</h1>
+    <form id="searchForm">
+        <input type="text" id="queryInput" placeholder="Enter your query">
+        <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById("searchForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var query = document.getElementById("queryInput").value.trim();
+            if (query !== "") {
+                fetch("/search", {
+                    method: "POST",
+                    body: JSON.stringify({ query: query }),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    displayResults(data);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        });
+
+        function displayResults(results) {
+            var resultsContainer = document.getElementById("results");
+            resultsContainer.innerHTML = "";
+            if (results.length === 0) {
+                resultsContainer.innerHTML = "<p>No results found.</p>";
+            } else {
+                results.forEach(result => {
+                    var link = document.createElement("a");
+                    link.href = result[0];
+                    link.textContent = result[0];
+                    var similarity = document.createElement("span");
+                    similarity.textContent = ` (Similarity: ${result[2]})`;
+                    var resultDiv = document.createElement("div");
+                    resultDiv.appendChild(link);
+                    resultDiv.appendChild(similarity);
+                    resultsContainer.appendChild(resultDiv);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+
+<!--<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #searchInput {
+            width: 400px;
+            padding: 8px;
+            font-size: 16px;
+        }
+        #searchButton {
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .result {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Document Search</h1>
+    <input type="text" id="searchInput" placeholder="Enter your query">
+    <button id="searchButton">Search</button>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById("searchButton").addEventListener("click", function() {
+            var query = document.getElementById("searchInput").value.trim();
+            if (query !== "") {
+                fetch(`/search?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayResults(data);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            }
+        });
+
+        function displayResults(results) {
+            var resultsContainer = document.getElementById("results");
+            resultsContainer.innerHTML = "";
+            if (results.length === 0) {
+                resultsContainer.innerHTML = "<p>No results found.</p>";
+            } else {
+                results.forEach(result => {
+                    var link = document.createElement("a");
+                    link.href = result.url;
+                    link.textContent = result.title;
+                    var similarity = document.createElement("span");
+                    similarity.textContent = ` (Similarity: ${result.similarity})`;
+                    var resultDiv = document.createElement("div");
+                    resultDiv.className = "result";
+                    resultDiv.appendChild(link);
+                    resultDiv.appendChild(similarity);
+                    resultsContainer.appendChild(resultDiv);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
+-->
