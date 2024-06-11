@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .chat-container {
+            width: 600px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chat-title {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .chat-log {
+            overflow-y: scroll;
+            max-height: 400px;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Align bubbles to the right */
+        }
+
+        .message {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+            display: inline-block;
+            max-width: calc(100% - 20px);
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: #fff;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .bot-message {
+            background-color: #eee;
+            color: #333;
+            align-self: flex-start;
+        }
+
+        .bot-message a {
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .bot-message a:hover {
+            text-decoration: underline;
+        }
+
+        .bot-message .score {
+            opacity: 0.5;
+        }
+
+        .chat-input {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-title">CloudDefenseBot</div>
+        <div class="chat-log" id="messages"></div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your query here...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <script>
+        function sendMessage() {
+            var input = document.getElementById("userInput");
+            var message = input.value;
+            if (message.trim() === "") return;
+
+            var messages = document.getElementById("messages");
+            var userMessage = document.createElement("div");
+            userMessage.textContent = message;
+            userMessage.className = "message user-message";
+            messages.appendChild(userMessage);
+            input.value = "";
+
+            fetch('/get_links', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    var botMessage = document.createElement("div");
+                    botMessage.innerHTML = `<span><a href="${item.link}" target="_blank">${item.link}</a></span> (Score: <span class="score">${item.score.toFixed(4)}</span>)`;
+                    botMessage.className = "message bot-message";
+                    messages.appendChild(botMessage);
+                });
+                messages.scrollTop = messages.scrollHeight;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

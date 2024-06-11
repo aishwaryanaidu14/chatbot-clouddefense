@@ -1,0 +1,8 @@
+Flask
+flask-cors
+requests
+beautifulsoup4
+torch
+transformers
+numpy
+scikit-learn
