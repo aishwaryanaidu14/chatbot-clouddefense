@@ -15,12 +15,12 @@ Before you begin, make sure you have the following installed:
 
 
 2. **Install Dependencies:**
-pip install -r requirements.txt
+```pip install -r requirements.txt```
 
 
 
 3. **Run the Flask Application:**
-python app.py
+```python app.py```
 
 
 
