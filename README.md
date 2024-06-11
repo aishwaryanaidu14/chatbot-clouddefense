@@ -14,18 +14,14 @@ Before you begin, make sure you have the following installed:
 1. **Clone the Repository:**
 
 
-markdown
-
 2. **Install Dependencies:**
 pip install -r requirements.txt
 
-markdown
 
 
 3. **Run the Flask Application:**
 python app.py
 
-markdown
 
 
 4. **Access the Application:**
