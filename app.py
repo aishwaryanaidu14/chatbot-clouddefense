@@ -55,8 +55,9 @@ print(f"Found {len(article_links)} article links.")
 def fetch_article_content(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
+    article_title = soup.find('h1').get_text(strip=True)  # Assuming titles are in <h1> tags
     article_content = soup.get_text(separator=' ')
-    return article_content.strip()
+    return article_title, article_content.strip()
 
 def chunk_text(text, max_length=512):
     words = text.split()
@@ -81,8 +82,11 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
     for future in concurrent.futures.as_completed(future_to_url):
         url = future_to_url[future]
         try:
-            content = future.result()
-            document_chunks[url] = chunk_text(content)
+            title, content = future.result()
+            document_chunks[url] = {
+                'title': title,
+                'chunks': chunk_text(content)
+            }
         except Exception as exc:
             print(f"Error fetching content from {url}: {exc}")
 
@@ -103,16 +107,16 @@ mapping = []
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
     future_to_chunk = {
-        executor.submit(embed_text, chunk): (doc_url, i)
-        for doc_url, chunks in document_chunks.items()
-        for i, chunk in enumerate(chunks)
+        executor.submit(embed_text, chunk): (doc_url, doc_data['title'], i)
+        for doc_url, doc_data in document_chunks.items()
+        for i, chunk in enumerate(doc_data['chunks'])
     }
     for future in concurrent.futures.as_completed(future_to_chunk):
-        doc_url, i = future_to_chunk[future]
+        doc_url, title, i = future_to_chunk[future]
         try:
             embedding = future.result()
             embeddings.append(embedding)
-            mapping.append((doc_url, i))
+            mapping.append((doc_url, title, i))
         except Exception as exc:
             print(f"Error creating embedding for chunk {i} of {doc_url}: {exc}")
 
@@ -135,7 +139,7 @@ def retrieve_document_links(query, top_n=3):
     query_embedding = embed_text(query)
     similarities = cosine_similarity([query_embedding], embeddings)
     sorted_indices = np.argsort(similarities[0])[::-1]
-    ranked_links = [(mapping[i][0], mapping[i][1], float(similarities[0][i])) for i in sorted_indices[:top_n]]
+    ranked_links = [(mapping[i][0], mapping[i][1], mapping[i][2], float(similarities[0][i])) for i in sorted_indices[:top_n]]
     return ranked_links
 
 @app.route('/')
@@ -147,7 +151,8 @@ def get_links():
     data = request.json
     query = data['query']
     ranked_links = retrieve_document_links(query)
-    response = [{'link': link, 'chunk_idx': chunk_idx, 'score': score} for link, chunk_idx, score in ranked_links]
+    response = [{'link': link, 'title': title, 'chunk_idx': chunk_idx, 'score': score} 
+                for link, title, chunk_idx, score in ranked_links]
     return jsonify(response)
 
 if __name__ == "__main__":
