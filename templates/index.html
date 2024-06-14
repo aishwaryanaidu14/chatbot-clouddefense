@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -8,7 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 0; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -159,4 +159,274 @@
         }
     </script>
 </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #161857;
+        }
+
+        /* Chatbot icon styling */
+        #chatbot-icon-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color:#007bff;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+            padding: 10px;
+            border-radius: 25px;
+        }
+
+        #chatbot-icon {
+            width: 30px;
+            height: 30px;
+        }
+
+        #chatbot-icon img {
+            width: 100%;
+            height: 100%;
+        }
+
+        #chatbot-text {
+            margin-left: 5px;
+            font-size: 0.875 rem;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        /* Chat container styling */
+        .chat1-container {
+            width: 370px;
+            height: 50px;
+            background-color: #fff;
+            color: #007bff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            /* padding: 5px; */
+            border-radius: 8px;
+            display: none; /* Hide initially */
+            position: fixed;
+            bottom: 540px;
+            right: 20px;
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .chat1-header {
+        display: flex;
+        align-items: center;
+        background-color: #007bff; /* Blue background */
+        width: 100%; /* Span the entire width */
+        padding: 10px;
+        box-sizing: border-box; /* Include padding in the width */
+        border-radius: 8px 8px 0 0; /* Rounded top corners */
+        }
+
+        .chat1-header img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .chat1-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #fff; /* White text */
+        }
+
+        .chat1-header p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #7fff00;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5em;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .chat2-container {
+            width: 350px;
+            height: 430px;
+            background-color: #fff;
+            color: #007bff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 0 0 8px 8px;
+            display: none; /* Hide initially */
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .chat2-log {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 10px;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 10px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+            display: inline-block;
+            max-width: calc(100% - 20px);
+        }
+
+        .user-message {
+            background-color: #007bff;
+            color: #fff;
+            align-self: flex-end;
+            text-align: left;
+            margin-right: 15px;
+        }
+
+        .bot-message {
+            background-color: #ccc;
+            color: #333;
+            align-self: flex-start;
+            color: #333;
+            margin-left:15px;
+            font-size: small;
+        }
+
+        .chat-input {
+            display: flex;
+            margin-top: 10px;
+            border-color: #333;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border-color: #333 ;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="chatbot-icon-container">
+        <div id="chatbot-icon">
+            <img src="{{ url_for('static', filename='chatbot-icon.png') }}" alt="Chatbot Icon">
+        </div>
+        <div id="chatbot-text">Help ?</div>
+    </div>
+    <div class="chat1-container" id="chat1-container">
+        <div class="chat1-header">
+            <img src="{{ url_for('static', filename='chatbot-icon.png') }}" alt="Chatbot Icon">
+            <div>
+                <h2>CloudDefense Support Bot</h2>
+            </div>
+            <span class="close-btn" id="close-chat1">&times;</span> 
+        </div>
+    </div>
+    <div class="chat2-container" id="chat2-container">    
+        <div class="chat2-log" id="messages">
+            <!-- Messages will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your query here...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('chatbot-icon-container').addEventListener('click', function() {
+            var chatContainer2 = document.getElementById('chat2-container');
+            var chatContainer1 = document.getElementById('chat1-container');
+            if (chatContainer2.style.display === 'none' || chatContainer2.style.display === '' || chatContainer1.style.display === 'none' || chatContainer1.style.display === '' ) {
+                chatContainer2.style.display = 'flex';
+                chatContainer1.style.display = 'flex';
+            } else {
+                chatContainer2.style.display = 'none';
+                chatContainer1.style.display = 'none';
+            }
+        });
+
+        document.getElementById('close-chat1').addEventListener('click', function() {
+            document.getElementById('chat1-container').style.display = 'none';
+            document.getElementById('chat2-container').style.display = 'none';
+        });
+
+        function sendMessage() {
+            var input = document.getElementById("userInput");
+            var message = input.value;
+            if (message.trim() === "") return;
+
+            var messages = document.getElementById("messages");
+            var userMessage = document.createElement("div");
+            userMessage.textContent = message;
+            userMessage.className = "message user-message";
+            messages.appendChild(userMessage);
+
+            input.value = "";
+
+            fetch('/get_links', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    var botMessage = document.createElement("div");
+                    botMessage.innerHTML = `<span><a href="${item.link}" target="_blank">${item.link}</a></span>`;
+                    botMessage.className = "message bot-message";
+                    messages.appendChild(botMessage);
+                });
+                scrollToBottom();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function scrollToBottom() {
+            var messagesLog = document.getElementById("messages");
+            messagesLog.scrollTop = messagesLog.scrollHeight;
+        }
+    </script>
+</body>
 </html>
+
+
+
