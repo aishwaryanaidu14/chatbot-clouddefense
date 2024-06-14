@@ -75,7 +75,7 @@
             text-decoration: underline;
         }
 
-       .bot-message.score {
+       .bot-message .score {
             opacity: 0.5;
         }
 
@@ -144,7 +144,7 @@
            .then(data => {
                 data.forEach(item => {
                     var botMessage = document.createElement("div");
-                    botMessage.innerHTML = `<span><a href="${item.link}" target="_blank">${item.link}</a></span> (Score: <span class="score">${item.score.toFixed(4)}</span>)`;
+                    botMessage.innerHTML = `<span><strong>${item.title}</strong>: <a href="${item.link}" target="_blank">${item.link}</a></span> (Score: <span class="score">${item.score.toFixed(4)}</span>)`;
                     botMessage.className = "message bot-message";
                     messages.appendChild(botMessage);
                 });

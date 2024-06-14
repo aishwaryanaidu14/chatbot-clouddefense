@@ -11,7 +11,7 @@ Before you begin, make sure you have the following installed:
 
 ## Setup Instructions
 
-1. **Clone the Repository:**
+1. **Clone the Repository**
 
 
 2. **Install Dependencies:**
